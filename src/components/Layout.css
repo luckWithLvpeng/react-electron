@@ -1,0 +1,35 @@
+
+.App {
+    height: 100%;
+}
+
+h1 {
+    text-align: center;
+    width: 100%;
+    font-size: 20px;
+    font-family: SimHei;
+    font-weight: 400;
+    color: rgba(255, 255, 255, 1);
+    line-height: 66px;
+    text-shadow: 0px 0px 20px #1f58cf;
+    height: 72px;
+    background: url("../asset/title.png") no-repeat center top;
+    margin: 0px;
+}
+
+.timeInput {
+    width: 100%;
+    padding: 6px 4px;
+    border-radius: 0px;
+}
+
+.content {
+    position: absolute;
+    bottom: 0px;
+    left: 180px;
+    width: calc(100% - 240px);;
+    height: calc(100% - 90px);;
+}
+
+
+

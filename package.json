@@ -1,0 +1,129 @@
+{
+  "name": "face_export_tool",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "@material-ui/core": "^3.5.1",
+    "antd": "^3.10.7",
+    "axios": "^0.18.0",
+    "bootstrap": "^3.3.7",
+    "concurrently": "^4.1.0",
+    "daterangepicker": "^3.0.3",
+    "electron-is-dev": "^1.0.1",
+    "electron-store": "^2.0.0",
+    "file-type": "^10.7.0",
+    "fs-extra": "^7.0.1",
+    "jquery": "^3.3.1",
+    "moment": "^2.22.2",
+    "path-parse": "^1.0.6",
+    "qs": "^6.6.0",
+    "react": "^16.6.3",
+    "react-bootstrap": "^0.32.4",
+    "react-dom": "^16.6.3",
+    "react-redux": "^6.0.0",
+    "react-router-dom": "^4.3.1",
+    "react-scripts": "2.1.1",
+    "react-swipeable-views": "^0.13.0",
+    "read-chunk": "^3.0.0",
+    "redux": "^4.0.1",
+    "redux-saga": "^0.16.2",
+    "rimraf": "^2.6.2",
+    "sanitize.css": "^8.0.0",
+    "toastr": "^2.1.4"
+  },
+  "devDependencies": {
+    "devtron": "^1.4.0",
+    "electron": "^4.0.0",
+    "electron-builder": "^20.38.4",
+    "electron-debug": "^2.0.0",
+    "electron-devtools-installer": "^2.2.4",
+    "foreman": "^3.0.1",
+    "react-app-rewired": "^1.6.2",
+    "wait-on": "^3.2.0"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "ebuild": "electron-builder -m",
+    "preebuild": "yarn build",
+    "pack": "build -mw",
+    "prepack": "yarn build",
+    "dev": "concurrently \"BROWSER=none yarn start\" \"wait-on http://localhost:3000 && electron .\""
+  },
+  "eslintConfig": {
+    "extends": "react-app"
+  },
+  "browserslist": [
+    ">0.2%",
+    "not dead",
+    "not ie <= 11",
+    "not op_mini all"
+  ],
+  "author": "北京百目科技有限公司",
+  "homepage": "./",
+  "main": "public/electron.js",
+  "description": "人脸识别平台导库工具",
+  "email": "1217869072@qq.com",
+  "build": {
+    "productName": "face_export_tool",
+    "extends": null,
+    "appId": "com.alleyes.app",
+    "copyright": "Copyright © alleyes",
+    "extraMetadata": {
+      "main": "build/electron.js",
+      "asar": true
+    },
+    "files": [
+      "build/**/*",
+      "node_modules/**/*",
+      "icons/**/*"
+    ],
+    "dmg": {
+      "contents": [
+        {
+          "x": 130,
+          "y": 220
+        },
+        {
+          "x": 410,
+          "y": 220,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ]
+    },
+    "mac": {
+      "icon": "icons/icon.png",
+      "category": "public.app.face.export.tools"
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "icons/icon.png"
+    },
+    "linux": {
+      "target": [
+        "deb",
+        "rpm",
+        "snap",
+        "AppImage"
+      ],
+      "category": "Development",
+      "maintainer": "lvpeng",
+      "icon": "icons/icon.png"
+    },
+    "directories": {
+      "buildResources": "icons",
+      "output": "dist"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": true,
+      "allowElevation": true,
+      "allowToChangeInstallationDirectory": true
+    }
+  }
+}

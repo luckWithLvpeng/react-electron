@@ -1,0 +1,53 @@
+
+.left_nav {
+    width: 150px;
+    height: calc(100% - 28px);
+    position: absolute;
+    left: 0px;
+    bottom: 0px;
+    background: #373B47;
+    padding-top: 40px;
+}
+
+.left_nav a {
+    display: block;
+    color: rgba(255, 255, 255, 1);
+    font-size: 14px;
+    line-height: 32px;
+    padding-left: 50px;
+    margin-bottom: 10px;
+}
+
+.left_nav a.upload {
+    background: url("../asset/upload_icon.png") no-repeat 10% center;
+}
+
+.left_nav a.upload_active {
+    background: url("../asset/upload_icon_active.png") no-repeat 10% center;
+}
+
+.left_nav a.log {
+    background: url("../asset/log_icon.png") no-repeat 10% center;
+}
+
+.left_nav a.log_active {
+    background: url("../asset/log_icon_active.png") no-repeat 10% center;
+}
+
+.left_nav a.feature {
+    background: url("../asset/feature_icon.png") no-repeat 10% center;
+}
+
+.left_nav a.feature_active {
+    background: url("../asset/feature_icon_active.png") no-repeat 10% center;
+}
+
+.left_nav a.active {
+    background-color: #24282C;
+    color: #B3C0FE;
+    border-bottom: 1px solid #032FFD;
+}
+
+.left_nav a:hover, .left_nav a:focus {
+    text-decoration: none;
+}
