@@ -22,6 +22,7 @@ export default {
     acquiredNumber: 0,
     savedNumber: store? store.size - fNum: 0,
     failureNumber: store? store.get("failureNum") - 1: 0,
+    traversing: false,
     loading: false,
   }, action) {
     switch (action.type) {

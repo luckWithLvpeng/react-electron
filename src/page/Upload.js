@@ -176,20 +176,20 @@ class Log extends Component {
           </Col>
         </FormGroup>
         {
-          upload.savedNumber || upload.failureNumber ? (
+          upload.loading ? (
             <FormGroup bsSize="small">
               <Col componentClass={ControlLabel} xs={3}>
-                历史入库：
+                遍历目录中...
               </Col>
               <Col xs={7} componentClass={ControlLabel} style={{textAlign: "left"}}>
-                成功 [ {upload.savedNumber} ] 条， 失败 [ {upload.failureNumber} ]条。
+                {upload.allNumber}
               </Col>
             </FormGroup>
 
           ) : null
         }
         {
-          (upload.savedNumber || upload.failureNumber) && upload.allNumber ? (
+          (upload.savedNumber || upload.failureNumber) && upload.allNumber && !upload.traversing ? (
             <Row>
               <Col xs={3} className="text-right">
                 {`进度[ ${upload.savedNumber + upload.failureNumber} / ${upload.allNumber} ]`}
@@ -200,6 +200,19 @@ class Log extends Component {
                   now={Math.floor((upload.savedNumber + upload.failureNumber) / upload.allNumber * 100)}/>
               </Col>
             </Row>
+          ) : null
+        }
+        {
+          upload.savedNumber || upload.failureNumber ? (
+            <FormGroup bsSize="small">
+              <Col componentClass={ControlLabel} xs={3}>
+                {upload.loading ? "入库信息": "历史入库"}
+              </Col>
+              <Col xs={7} componentClass={ControlLabel} style={{textAlign: "left"}}>
+                成功 [ {upload.savedNumber} ] 条， 失败 [ {upload.failureNumber} ]条。
+              </Col>
+            </FormGroup>
+
           ) : null
         }
         <br/>

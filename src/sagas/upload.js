@@ -1,4 +1,4 @@
-import {cancel, cancelled, fork, put, take} from 'redux-saga/effects'
+import {cancel, cancelled, fork, put, take,call} from 'redux-saga/effects'
 import {delay} from 'redux-saga'
 import * as actions from '../actions'
 import axios from "axios/index";
@@ -30,11 +30,15 @@ function* uploadFeature_() {
   var url = "http://" + server.ip + ":" + server.port + config.api.addFeature
   yield put(actions.upload['success']({
     allNumber: 0,
+    traversing: true,
     loading: true
   }))
   var electronStore = new Store({name: upload.path.replace(/\//g, "_")})
   try {
-    var images = walkDir(upload.path)
+    var images = yield call(walkDir,upload.path)
+    yield put(actions.upload['success']({
+      traversing: false,
+    }))
     yield put(actions.upload['success']({allNumber: images.length}))
     var folderName = ""
     if (ostype === "windows") {
@@ -47,10 +51,12 @@ function* uploadFeature_() {
       var fNum = electronStore.get("failureNum")
       var parseName = {};
       if (ostype === "windows") {
+        console.log(images[i])
         parseName = parsePath.win32(images[i])
       }else  {
         parseName = parsePath(images[i])
       }
+      console.log(parseName.name)
       if(!electronStore.has(parseName.name)) {
         var bolb = fs.readFileSync(images[i]);
         var file = new File([bolb], parseName.base, {type: "image/jpeg", path: images[i]});
@@ -81,7 +87,8 @@ function* uploadFeature_() {
   } catch (e) {
     toastr.error(e.message + ": 请确认人脸服务是不是正常运行")
     yield put(actions.upload['success']({
-      loading: false
+      loading: false,
+      traversing: false
     }))
   } finally {
     if (yield cancelled()) {
@@ -90,6 +97,7 @@ function* uploadFeature_() {
       yield put(actions.upload['success']({
         allNumber: 0,
         loading: false,
+        traversing: false,
       }))
     } else {
       // 任务处理结束，打通循环
@@ -121,21 +129,27 @@ function getFailurePath(path,folderName) {
   return target
 }
 
-function walkDir(dir) {
+function *walkDir(dir) {
   var results = []
-  fs.readdirSync(dir).forEach(function (name) {
-    var filePath = path.join(dir, name)
-    var stat = fs.statSync(filePath)
-    if (stat && stat.isDirectory()) {
-      results = results.concat(walkDir(filePath))
-    } else {
-      const buffer = readChunk.sync(filePath, 0, fileType.minimumBytes);
-      var state = fileType(buffer);
-      if (state && state.mime.indexOf("image") >= 0) {
-        results.push(filePath)
+  var files = fs.readdirSync(dir)
+  var num = 0;
+  for (var i= 0;i<files.length;i ++) {
+    var name = files[i]
+      var filePath = path.join(dir, name)
+      var stat = fs.statSync(filePath)
+      if (stat && stat.isDirectory()) {
+        var data = yield walkDir(filePath)
+        results = results.concat(data)
+      } else {
+        const buffer = readChunk.sync(filePath, 0, fileType.minimumBytes);
+        var state = fileType(buffer);
+        if (state && state.mime.indexOf("image") >= 0) {
+          results.push(filePath)
+          yield put(actions.upload['success']({allNumber: ++num}))
+          yield delay(0)
+        }
       }
-    }
-  })
+  }
   return results
 }
 
