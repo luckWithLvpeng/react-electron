@@ -15,6 +15,7 @@ const fileType = electron.remote.require('file-type');
 const Store = electron.remote.require('electron-store');
 axios.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded';
 var ostype = os.platform()
+var isWindow = ostype.indexOf("win") >= 0? true: false
 export function* uploadFeature() {
   while (yield take(actions.UPLOAD_FEATURE["REQUEST"])) {
     const bgSyncUploadFeature = yield fork(uploadFeature_)
@@ -41,23 +42,22 @@ function* uploadFeature_() {
     }))
     yield put(actions.upload['success']({allNumber: images.length}))
     var folderName = ""
-    if (ostype === "windows") {
+    if (isWindow) {
       folderName = parsePath.win32(upload.path).base;
     }else  {
       folderName = parsePath(upload.path).base;
     }
     var failurePath = getFailurePath(upload.faildPath,folderName)
+    var fNum = electronStore.get("failureNum")
     for (var i = 0; i <= images.length - 1; i++) {
-      var fNum = electronStore.get("failureNum")
       var parseName = {};
-      if (ostype === "windows") {
-        console.log(images[i])
+      if (isWindow) {
         parseName = parsePath.win32(images[i])
       }else  {
         parseName = parsePath(images[i])
       }
-      console.log(parseName.name)
       if(!electronStore.has(parseName.name)) {
+        console.log(images[i])
         var bolb = fs.readFileSync(images[i]);
         var file = new File([bolb], parseName.base, {type: "image/jpeg", path: images[i]});
         var formDate = new FormData();
@@ -69,8 +69,8 @@ function* uploadFeature_() {
           yield put(actions.upload['success']({savedNumber: electronStore.size - fNum}))
         } else {
           electronStore.set(parseName.name,false)
-          electronStore.set("failureNum",fNum + 1)
-          yield put(actions.upload['success']({failureNumber: electronStore.get("failureNum") - 1}))
+          electronStore.set("failureNum",++fNum)
+          yield put(actions.upload['success']({failureNumber: fNum - 1}))
           try {
             fs.accessSync(failurePath, fs.constants.F_OK);
           } catch (e) {
@@ -82,12 +82,14 @@ function* uploadFeature_() {
 
     }
     yield put(actions.upload['success']({
-      loading: false
+      loading: false,
+      traversing: false
     }))
   } catch (e) {
-    toastr.error(e.message + ": 请确认人脸服务是不是正常运行")
+    toastr.error(e.message)
     yield put(actions.upload['success']({
       loading: false,
+      errorText: e.message,
       traversing: false
     }))
   } finally {
@@ -117,12 +119,8 @@ function getFailurePath(path,folderName) {
   var dirName = "上传失败图片_" + folderName
   var target = ""
 
-  if (ostype === "windows") {
+  if (isWindow) {
     target = path + "\\" + dirName + "\\"
-  } else if (ostype === "linux") {
-    target = path + "/" + dirName + "/"
-  } else if (ostype === "darwin") {
-    target = path + "/" + dirName + "/"
   } else {
     target = path + "/" + dirName + "/"
   }

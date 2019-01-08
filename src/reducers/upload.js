@@ -24,6 +24,7 @@ export default {
     failureNumber: store? store.get("failureNum") - 1: 0,
     traversing: false,
     loading: false,
+    errorText:""
   }, action) {
     switch (action.type) {
       case actions.UPLOAD["SUCCESS"]:

@@ -216,7 +216,6 @@ class Log extends Component {
           ) : null
         }
         <br/>
-        <br/>
 
         <FormGroup>
           <Col xs={12} className="text-center">
@@ -229,6 +228,15 @@ class Log extends Component {
             }
           </Col>
         </FormGroup>
+          <br/>
+
+          {upload.errorText ? (
+              <div className={"text-danger"}>
+                  {
+                      upload.errorText
+                  }
+              </div>
+          ): null}
       </Form>
     )
   }
