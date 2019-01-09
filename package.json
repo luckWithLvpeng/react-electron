@@ -67,7 +67,7 @@
   "description": "人脸识别平台导库工具",
   "email": "1217869072@qq.com",
   "build": {
-    "productName": "face_export_tool",
+    "productName": "导库工具",
     "extends": null,
     "appId": "com.alleyes.app",
     "copyright": "Copyright © alleyes",

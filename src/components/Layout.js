@@ -9,6 +9,7 @@ import toastr from "toastr";
 import Log from '../page/Log'
 import Feature from '../page/Feature'
 import Upload from '../page/Upload'
+import Refresh from '../asset/refresh.png'
 
 toastr.options.showMethod = 'slideDown';
 toastr.options.positionClass = 'toast-top-center';
@@ -80,7 +81,10 @@ class Layout extends Component {
                         bsSize="small"
                         type={"submit"}
                         className={server.test ? "success btn_default" : "btn_default"}>
-                        {server.test ? "已连接" : "链接"}
+                        <div style={{width: "60px"}}>
+                          {server.test ? <img src={Refresh} style={{verticalAlign: "text-bottom",display: "inline-block",marginRight: "5px"}} alt=""/> : ""}
+                          {server.test ? <span>已连接</span> : "链接"}
+                        </div>
                       </Button>
                     </InputGroup.Button>
                   </InputGroup>

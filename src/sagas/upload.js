@@ -15,7 +15,11 @@ const fileType = electron.remote.require('file-type');
 const Store = electron.remote.require('electron-store');
 axios.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded';
 var ostype = os.platform()
-var isWindow = ostype.indexOf("win") >= 0? true: false
+var isWindow = ostype === "win32"? true: false
+
+
+var folderStroe = null
+var failureNum = 0
 export function* uploadFeature() {
   while (yield take(actions.UPLOAD_FEATURE["REQUEST"])) {
     const bgSyncUploadFeature = yield fork(uploadFeature_)
@@ -32,9 +36,11 @@ function* uploadFeature_() {
   yield put(actions.upload['success']({
     allNumber: 0,
     traversing: true,
+    errorText: "",
     loading: true
   }))
-  var electronStore = new Store({name: upload.path.replace(/\//g, "_")})
+  // var electronStore = new Store({name: upload.path.replace(/\//g, "_")})
+  folderStroe = new Store({name: upload.path.replace(/\//g, "_")})
   try {
     var images = yield call(walkDir,upload.path)
     yield put(actions.upload['success']({
@@ -48,7 +54,8 @@ function* uploadFeature_() {
       folderName = parsePath(upload.path).base;
     }
     var failurePath = getFailurePath(upload.faildPath,folderName)
-    var fNum = electronStore.get("failureNum")
+    // var fNum = electronStore.get("failureNum")
+    failureNum = folderStroe.get("failureNum")
     for (var i = 0; i <= images.length - 1; i++) {
       var parseName = {};
       if (isWindow) {
@@ -56,30 +63,37 @@ function* uploadFeature_() {
       }else  {
         parseName = parsePath(images[i])
       }
-      if(!electronStore.has(parseName.name)) {
-        console.log(images[i])
+      if(!folderStroe.has(parseName.name)) {
         var bolb = fs.readFileSync(images[i]);
         var file = new File([bolb], parseName.base, {type: "image/jpeg", path: images[i]});
         var formDate = new FormData();
         formDate.append("file", file);
         formDate.append("subid", upload.sublibId);
-        var {data} = yield axios.post(url, formDate)
-        if (data.status) {
-          electronStore.set( parseName.name, true)
-          yield put(actions.upload['success']({savedNumber: electronStore.size - fNum}))
-        } else {
-          electronStore.set(parseName.name,false)
-          electronStore.set("failureNum",++fNum)
-          yield put(actions.upload['success']({failureNumber: fNum - 1}))
-          try {
-            fs.accessSync(failurePath, fs.constants.F_OK);
-          } catch (e) {
-            fs.mkdirSync(failurePath);
-          }
-          copyFile(images[i],path.resolve(failurePath + parseName.base));
+        yield fork(postImage,url,formDate,failurePath,images[i],parseName)
+        if(i % 10 === 0) {
+          yield delay(0)
         }
+        // var {data} = yield axios.post(url, formDate)
+        // if (data.status) {
+        //   electronStore.set( parseName.name, true)
+        //   yield put(actions.upload['success']({savedNumber: electronStore.size - fNum}))
+        // } else {
+        //   electronStore.set(parseName.name,false)
+        //   electronStore.set("failureNum",++fNum)
+        //   yield put(actions.upload['success']({failureNumber: fNum - 1}))
+        //   try {
+        //     fs.accessSync(failurePath, fs.constants.F_OK);
+        //   } catch (e) {
+        //     fs.mkdirSync(failurePath);
+        //   }
+        //   copyFile(images[i],path.join(failurePath + parseName.base));
+        // }
       }
 
+    }
+    // 开启多线程 ，等待子线程结束
+    while (folderStroe.size -1 < images.length) {
+      yield delay(200)
     }
     yield put(actions.upload['success']({
       loading: false,
@@ -107,6 +121,23 @@ function* uploadFeature_() {
     }
   }
 }
+function* postImage(url,formData,failurePath,failureImagePath,parseName) {
+  var {data} = yield axios.post(url, formData)
+  if (data.status) {
+    folderStroe.set( parseName.name, true)
+    yield put(actions.upload['success']({savedNumber: folderStroe.size - failureNum}))
+  } else {
+    folderStroe.set(parseName.name,false)
+    folderStroe.set("failureNum",++failureNum)
+    yield put(actions.upload['success']({failureNumber: failureNum - 1}))
+    try {
+      fs.accessSync(failurePath, fs.constants.F_OK);
+    } catch (e) {
+      fs.mkdirSync(failurePath);
+    }
+    copyFile(failureImagePath,path.join(failurePath + parseName.base));
+  }
+}
 function copyFile(src, dest) {
   let readStream = fs.createReadStream(src);
 
@@ -118,7 +149,6 @@ function copyFile(src, dest) {
 function getFailurePath(path,folderName) {
   var dirName = "上传失败图片_" + folderName
   var target = ""
-
   if (isWindow) {
     target = path + "\\" + dirName + "\\"
   } else {
@@ -136,15 +166,17 @@ function *walkDir(dir) {
       var filePath = path.join(dir, name)
       var stat = fs.statSync(filePath)
       if (stat && stat.isDirectory()) {
-        var data = yield walkDir(filePath)
-        results = results.concat(data)
+        // var data = yield walkDir(filePath)
+        // results = results.concat(data)
       } else {
         const buffer = readChunk.sync(filePath, 0, fileType.minimumBytes);
         var state = fileType(buffer);
         if (state && state.mime.indexOf("image") >= 0) {
           results.push(filePath)
           yield put(actions.upload['success']({allNumber: ++num}))
-          yield delay(0)
+          if(num % 200 === 0) {
+            yield delay(0)
+          }
         }
       }
   }
