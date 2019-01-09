@@ -20,6 +20,8 @@ var isWindow = ostype === "win32"? true: false
 
 var folderStroe = null
 var failureNum = 0
+// 多线程数量队列控制
+var subNum = 1000
 export function* uploadFeature() {
   while (yield take(actions.UPLOAD_FEATURE["REQUEST"])) {
     const bgSyncUploadFeature = yield fork(uploadFeature_)
@@ -70,8 +72,10 @@ function* uploadFeature_() {
         formDate.append("file", file);
         formDate.append("subid", upload.sublibId);
         yield fork(postImage,url,formDate,failurePath,images[i],parseName)
-        if(i % 10 === 0) {
-          yield delay(0)
+        // 控制fork的线程数，避免资源耗尽
+        if((i+1) - folderStroe >=subNum) {
+          console.log("b")
+          yield  delay(100)
         }
         // var {data} = yield axios.post(url, formDate)
         // if (data.status) {
@@ -92,9 +96,12 @@ function* uploadFeature_() {
 
     }
     // 开启多线程 ，等待子线程结束
+    console.log(111)
     while (folderStroe.size -1 < images.length) {
-      yield delay(200)
+      console.log(333)
+      yield delay(500)
     }
+    console.log(222)
     yield put(actions.upload['success']({
       loading: false,
       traversing: false
@@ -122,21 +129,32 @@ function* uploadFeature_() {
   }
 }
 function* postImage(url,formData,failurePath,failureImagePath,parseName) {
-  var {data} = yield axios.post(url, formData)
-  if (data.status) {
-    folderStroe.set( parseName.name, true)
-    yield put(actions.upload['success']({savedNumber: folderStroe.size - failureNum}))
-  } else {
-    folderStroe.set(parseName.name,false)
-    folderStroe.set("failureNum",++failureNum)
-    yield put(actions.upload['success']({failureNumber: failureNum - 1}))
-    try {
-      fs.accessSync(failurePath, fs.constants.F_OK);
-    } catch (e) {
-      fs.mkdirSync(failurePath);
+  try {
+    var {data} = yield axios.post(url, formData)
+    if (data.status) {
+      folderStroe.set( parseName.name, true)
+      yield put(actions.upload['success']({savedNumber: folderStroe.size - failureNum}))
+    } else {
+      folderStroe.set(parseName.name,false)
+      folderStroe.set("failureNum",++failureNum)
+      yield put(actions.upload['success']({failureNumber: failureNum - 1}))
+      try {
+        fs.accessSync(failurePath, fs.constants.F_OK);
+      } catch (e) {
+        fs.mkdirSync(failurePath);
+      }
+      copyFile(failureImagePath,path.join(failurePath + parseName.base));
     }
-    copyFile(failureImagePath,path.join(failurePath + parseName.base));
+  } catch (e) {
+    toastr.error(e.message)
+    yield put(actions.upload['success']({
+      errorText: e.message,
+      loading: false,
+      traversing: false
+    }))
+    yield put(actions.upload_feature['failure']())
   }
+
 }
 function copyFile(src, dest) {
   let readStream = fs.createReadStream(src);
