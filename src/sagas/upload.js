@@ -41,7 +41,6 @@ function* uploadFeature_() {
     errorText: "",
     loading: true
   }))
-  // var electronStore = new Store({name: upload.path.replace(/\//g, "_")})
   folderStroe = new Store({name: upload.path.replace(/\//g, "_")})
   try {
     var images = yield call(walkDir,upload.path)
@@ -56,41 +55,20 @@ function* uploadFeature_() {
       folderName = parsePath(upload.path).base;
     }
     var failurePath = getFailurePath(upload.faildPath,folderName)
-    // var fNum = electronStore.get("failureNum")
     failureNum = folderStroe.get("failureNum")
     for (var i = 0; i <= images.length - 1; i++) {
-      var parseName = {};
-      if (isWindow) {
-        parseName = parsePath.win32(images[i])
-      }else  {
-        parseName = parsePath(images[i])
-      }
-      if(!folderStroe.has(parseName.name)) {
-        // var bolb = fs.readFileSync(images[i]);
-        // var file = new File([bolb], parseName.base, {type: "image/jpeg", path: images[i]});
-        // var formDate = new FormData();
-        // formDate.append("file", file);
-        // formDate.append("subid", upload.sublibId);
-        yield fork(postImage,url,failurePath,images[i],parseName,upload.sublibId)
+      // var parseName = {};
+      // if (isWindow) {
+      //   parseName = parsePath.win32(images[i])
+      // }else  {
+      //   parseName = parsePath(images[i])
+      // }
+      if(!folderStroe.has(images[i])) {
+        yield fork(postImage,url,failurePath,images[i],upload.sublibId)
         // 控制fork的线程数，避免资源耗尽
         if((i+1) - folderStroe.size >=subNum) {
           yield  delay(100)
         }
-        // var {data} = yield axios.post(url, formDate)
-        // if (data.status) {
-        //   electronStore.set( parseName.name, true)
-        //   yield put(actions.upload['success']({savedNumber: electronStore.size - fNum}))
-        // } else {
-        //   electronStore.set(parseName.name,false)
-        //   electronStore.set("failureNum",++fNum)
-        //   yield put(actions.upload['success']({failureNumber: fNum - 1}))
-        //   try {
-        //     fs.accessSync(failurePath, fs.constants.F_OK);
-        //   } catch (e) {
-        //     fs.mkdirSync(failurePath);
-        //   }
-        //   copyFile(images[i],path.join(failurePath + parseName.base));
-        // }
       }
 
     }
@@ -124,7 +102,13 @@ function* uploadFeature_() {
     }
   }
 }
-function* postImage(url,failurePath,imagePath,parseName,sublibId) {
+function* postImage(url,failurePath,imagePath,sublibId) {
+  var parseName = {};
+  if (isWindow) {
+    parseName = parsePath.win32(imagePath)
+  }else  {
+    parseName = parsePath(imagePath)
+  }
   try {
     var bolb = fs.readFileSync(imagePath);
     var file = new File([bolb], parseName.base, {type: "image/jpeg", path: imagePath});
@@ -132,13 +116,11 @@ function* postImage(url,failurePath,imagePath,parseName,sublibId) {
     formDate.append("file", file);
     formDate.append("subid", sublibId);
     var {data} = yield axios.post(url, formDate)
-
     if (data.status) {
-      folderStroe.set( parseName.name, true)
+      folderStroe.set(imagePath, true)
       yield put(actions.upload['success']({savedNumber: folderStroe.size - failureNum}))
     } else {
-      console.log(data)
-      folderStroe.set(parseName.name,false)
+      folderStroe.set(imagePath,false)
       folderStroe.set("failureNum",++failureNum)
       yield put(actions.upload['success']({failureNumber: failureNum - 1}))
       try {
@@ -150,7 +132,6 @@ function* postImage(url,failurePath,imagePath,parseName,sublibId) {
     }
   } catch (e) {
     toastr.error(e.message)
-    console.log(e.message)
     yield put(actions.upload['success']({
       errorText: e.message,
       loading: false,
