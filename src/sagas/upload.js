@@ -41,7 +41,7 @@ function* uploadFeature_() {
     errorText: "",
     loading: true
   }))
-  folderStroe = new Store({name: upload.path.replace(/\//g, "_")})
+  folderStroe = new Store({name: upload.path.replace(/[\\/:]/g,"_")})
   try {
     var images = yield call(walkDir,upload.path)
     yield put(actions.upload['success']({

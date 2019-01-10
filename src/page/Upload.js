@@ -21,7 +21,7 @@ class Log extends Component {
       properties: ['openDirectory']
     });
     if (path && path[0]) {
-      var store = new Store({name: path[0].replace(/\//g, "_")})
+      var store = new Store({name: path[0].replace(/[\\/:]/g,"_")})
       if (!store.has("failureNum")) {
         store.set("failureNum",1)
       }

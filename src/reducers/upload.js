@@ -7,7 +7,7 @@ var fileFolder = store.get('fileFolder_upload');
 var failureFileFolder = store.get('fileFolder_upload_failure');
 var store = null;
 if(fileFolder && fileFolder.length >0) {
-  store = new Store({name: fileFolder.replace(/\//g,"_")})
+  store = new Store({name: fileFolder.replace(/[\\/:]/g,"_")})
   if (!(store.has("failureNum"))) {
     store.set("failureNum",1)
   }
@@ -32,7 +32,7 @@ export default {
         return {...state, ...action};
       case actions.UPLOAD["FAILURE"]:
         if (action.clear) {
-          store = new Store({name: state.path.replace(/\//g,"_")})
+          store = new Store({name: state.path.replace(/[\\/:]/g,"_")})
           store.clear()
           if (!store.has("failureNum")) {
             store.set("failureNum",1)
