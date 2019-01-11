@@ -110,7 +110,6 @@ function* uploadFeature_() {
       yield put(actions.upload_feature['failure']())
     }
     folderStroe.set("savedNumber",  savedNumber)
-
     folderStroe.set("failureNumber",failureNumber)
   }
 }

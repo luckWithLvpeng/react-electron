@@ -14,6 +14,12 @@ const rimraf = electron.remote.require('rimraf');
 
 var folderPath = ""
 
+// 保存已经读取的数据
+var savedNumber = 0
+// 保存名字重复的图片
+var allName = {}
+// 缓存的线程数
+var subNum = 50
 export function* exportFeature() {
   while ( yield take(actions.EXPORT_FEATURE["REQUEST"]) ) {
     const bgSyncFeature = yield fork(exportFeature_)
@@ -33,6 +39,8 @@ function * exportFeature_() {
     savedNumber: 0,
     loading: true
   }))
+  savedNumber = 0;
+  allName = {};
   try {
     var {data} = yield axios.get(url, {
       params: {
@@ -80,9 +88,31 @@ function * exportFeature_() {
         allFeature = allFeature.concat(data.data.features)
         yield put(actions.feature['success']({acquiredNumber: allFeature.length}))
       }
+
       // 防止在获取数据期间有新的数据添加进来
-      yield put(actions.feature['success']({allNumber: allFeature.length}))
-      yield call(saveData,allFeature)
+      if (allFeature.length > total) {
+        allFeature.length = total
+      }
+      var allNumber = allFeature.length
+      folderPath = getPath();
+      try {
+        fs.accessSync(folderPath, fs.constants.F_OK);
+      } catch (e) {
+        fs.mkdirSync(folderPath);
+      }
+      var url = "http://" + server.ip + ":" + server.port
+      for (var i = 0; i < allNumber; i++) {
+        yield fork(saveData,allFeature[i].Img_s,url,allFeature[i].Name,folderPath)
+        // 控制fork的线程数，避免资源耗尽
+        while((i+1) - savedNumber >=subNum) {
+          yield  delay(200)
+        }
+      }
+      // 开启多线程 ，等待子线程结束
+      while (savedNumber < allNumber) {
+        yield delay(200)
+      }
+      yield put(actions.feature['success']({loading: false}))
     } else {
       toastr.error(data.info)
     }
@@ -99,7 +129,7 @@ function * exportFeature_() {
         savedNumber: 0,
         loading: false,
       }))
-      rimraf(folderPath,err => err && toastr.error(err.message))
+      folderPath && rimraf(folderPath,err => err && toastr.error(err.message))
     } else {
       // 任务处理结束，打通循环
       yield put(actions.export_feature['failure']())
@@ -123,39 +153,28 @@ function getPath() {
   }
   return target
 }
-function * saveData(v) {
-  var dirName = getPath();
-  folderPath = dirName
-  const {SERVER} = store.getState();
-  var server = SERVER;
-  fs.mkdir(dirName, "0777", function (err) {
-    if (err) {
-      return toastr.error(err.message)
-    }
-  })
-  var url = "http://" + server.ip + ":" + server.port
-  var allName = {}
+function * saveData(api,url,Name,dirName) {
   try {
-    for (var i = 0; i < v.length; i++) {
-      var {data} = yield axios.get(url + v[i].Img_s, {responseType: "arraybuffer"})
-      if (allName[(v[i].Name)] !== undefined) {
-        fs.writeFile(dirName + v[i].Name + "(" + allName[v[i].Name] + ")" + ".jpg", new Buffer(data), (e) => {
-          if (e) {
-            toastr.error(e.toString())
-          }
-        })
-        allName[(v[i].Name)] += 1
-      } else  {
-        fs.writeFile(dirName + v[i].Name + ".jpg", new Buffer(data), (e) => {
-          if (e) {
-            toastr.error(e.toString())
-          }
-        })
-        allName[(v[i].Name)] = 1;
-      }
-      yield put(actions.feature['success']({savedNumber: (i + 1)}))
+    var {data} = yield axios.get(url + api, {responseType: "arraybuffer"})
+    if (allName[Name] !== undefined) {
+      fs.writeFile(dirName + Name + "(" + allName[Name] + ")" + ".jpg", new Buffer(data), (e) => {
+        if (e) {
+          toastr.error(e.toString())
+        }
+      })
+      allName[Name] += 1
+    } else  {
+      fs.writeFile(dirName +Name + ".jpg", new Buffer(data), (e) => {
+        if (e) {
+          toastr.error(e.toString())
+        }
+      })
+      allName[Name] = 1;
     }
-    yield put(actions.feature['success']({loading: false}))
+    yield put(actions.feature['success']({savedNumber: ++savedNumber}))
+    if (savedNumber %10 === 0) {
+      yield delay(0)
+    }
   } catch(e) {
     toastr.error(e.message)
     yield put(actions.feature['success']({loading: false}))
