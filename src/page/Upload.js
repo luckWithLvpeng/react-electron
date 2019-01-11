@@ -22,15 +22,11 @@ class Log extends Component {
     });
     if (path && path[0]) {
       var store = new Store({name: path[0].replace(/[\\/:]/g,"_")})
-      if (!store.has("failureNum")) {
-        store.set("failureNum",1)
-      }
-      var fNum = store && store.get("failureNum")
       dispatch(actions.upload['success']({
         ...upload,
         path: path[0],
-        savedNumber: store? store.size - fNum : 0,
-        failureNumber: store? fNum - 1 : 0,
+        savedNumber: store? store.get("savedNumber") || 0: 0,
+        failureNumber: store? store.get("failureNumber") || 0: 0,
         allNumber: 0
       }))
       userStore.set('fileFolder_upload', path[0], {expires: 999})

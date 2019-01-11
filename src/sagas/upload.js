@@ -19,7 +19,8 @@ var isWindow = ostype === "win32"? true: false
 
 
 var folderStroe = null
-var failureNum = 0
+var savedNumber = 0
+var failureNumber = 0
 // 多线程数量队列控制
 var subNum = 50
 export function* uploadFeature() {
@@ -41,13 +42,29 @@ function* uploadFeature_() {
     errorText: "",
     loading: true
   }))
-  folderStroe = new Store({name: upload.path.replace(/[\\/:]/g,"_")})
+  var pathString = upload.path.replace(/[\\/:]/g,"_");
+  folderStroe = new Store({name: pathString})
   try {
-    var images = yield call(walkDir,upload.path)
-    yield put(actions.upload['success']({
-      traversing: false,
-    }))
-    yield put(actions.upload['success']({allNumber: images.length}))
+    var images = null;
+    if (folderStroe.get("traversed")) {
+      images = JSON.parse(folderStroe.get(pathString) || null)
+      yield put(actions.upload['success']({
+        traversing: false,
+        allNumber: images.length
+      }))
+    } else {
+      images = yield call(walkDir,upload.path)
+      yield put(actions.upload['success']({
+        traversing: false,
+        allNumber: images.length
+      }))
+      folderStroe.set(pathString,JSON.stringify(images))
+      folderStroe.set("traversed",true)
+      folderStroe.set("allNumber",images.length)
+    }
+
+    failureNumber = folderStroe.get("failureNumber") || 0
+    savedNumber = folderStroe.get("savedNumber") || 0
     var folderName = ""
     if (isWindow) {
       folderName = parsePath.win32(upload.path).base;
@@ -55,26 +72,18 @@ function* uploadFeature_() {
       folderName = parsePath(upload.path).base;
     }
     var failurePath = getFailurePath(upload.faildPath,folderName)
-    failureNum = folderStroe.get("failureNum")
-    for (var i = 0; i <= images.length - 1; i++) {
-      // var parseName = {};
-      // if (isWindow) {
-      //   parseName = parsePath.win32(images[i])
-      // }else  {
-      //   parseName = parsePath(images[i])
-      // }
-      if(!folderStroe.has(images[i])) {
-        yield fork(postImage,url,failurePath,images[i],upload.sublibId)
-        // 控制fork的线程数，避免资源耗尽
-        if((i+1) - folderStroe.size >=subNum) {
-          yield  delay(100)
-        }
+    var allNumber = images.length;
+    for (var i = failureNumber + savedNumber; i < allNumber; i++) {
+      yield fork(postImage,url,failurePath,images[i],upload.sublibId)
+      // 控制fork的线程数，避免资源耗尽
+      while((i+1) - (failureNumber + savedNumber) >=subNum) {
+          yield  delay(500)
       }
 
     }
     // 开启多线程 ，等待子线程结束
-    while (folderStroe.size -1 < images.length) {
-      yield delay(500)
+    while (failureNumber + savedNumber < allNumber) {
+      yield delay(200)
     }
     yield put(actions.upload['success']({
       loading: false,
@@ -100,6 +109,9 @@ function* uploadFeature_() {
       // 任务处理结束，打通循环
       yield put(actions.upload_feature['failure']())
     }
+    folderStroe.set("savedNumber",  savedNumber)
+
+    folderStroe.set("failureNumber",failureNumber)
   }
 }
 function* postImage(url,failurePath,imagePath,sublibId) {
@@ -117,18 +129,15 @@ function* postImage(url,failurePath,imagePath,sublibId) {
     formDate.append("subid", sublibId);
     var {data} = yield axios.post(url, formDate)
     if (data.status) {
-      folderStroe.set(imagePath, true)
-      yield put(actions.upload['success']({savedNumber: folderStroe.size - failureNum}))
+      yield put(actions.upload['success']({savedNumber: ++savedNumber}))
     } else {
-      folderStroe.set(imagePath,false)
-      folderStroe.set("failureNum",++failureNum)
-      yield put(actions.upload['success']({failureNumber: failureNum - 1}))
       try {
         fs.accessSync(failurePath, fs.constants.F_OK);
       } catch (e) {
         fs.mkdirSync(failurePath);
       }
       copyFile(imagePath,path.join(failurePath + parseName.base));
+      yield put(actions.upload['success']({failureNumber: ++failureNumber}))
     }
   } catch (e) {
     toastr.error(e.message)

@@ -8,11 +8,7 @@ var failureFileFolder = store.get('fileFolder_upload_failure');
 var store = null;
 if(fileFolder && fileFolder.length >0) {
   store = new Store({name: fileFolder.replace(/[\\/:]/g,"_")})
-  if (!(store.has("failureNum"))) {
-    store.set("failureNum",1)
-  }
 }
-var fNum = store && store.get("failureNum",1)
 export default {
   UPLOAD(state = {
     path: fileFolder || "",
@@ -20,8 +16,8 @@ export default {
     sublibId: "",
     allNumber: 0,
     acquiredNumber: 0,
-    savedNumber: store? store.size - fNum: 0,
-    failureNumber: store? store.get("failureNum") - 1: 0,
+    savedNumber: store? store.get("savedNumber") || 0: 0,
+    failureNumber: store? store.get("failureNumber") || 0: 0,
     traversing: false,
     loading: false,
     errorText:""
@@ -34,9 +30,6 @@ export default {
         if (action.clear) {
           store = new Store({name: state.path.replace(/[\\/:]/g,"_")})
           store.clear()
-          if (!store.has("failureNum")) {
-            store.set("failureNum",1)
-          }
         }
         return {...state,savedNumber: 0,allNumber:0,failureNumber: 0};
       default:
