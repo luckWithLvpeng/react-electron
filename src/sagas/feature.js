@@ -20,6 +20,7 @@ var savedNumber = 0
 var allName = {}
 // 缓存的线程数
 var subNum = 50
+
 export function* exportFeature() {
   while ( yield take(actions.EXPORT_FEATURE["REQUEST"]) ) {
     const bgSyncFeature = yield fork(exportFeature_)
@@ -37,6 +38,7 @@ function * exportFeature_() {
     allNumber: 0,
     acquiredNumber: 0,
     savedNumber: 0,
+    error: "",
     loading: true
   }))
   savedNumber = 0;
@@ -118,7 +120,7 @@ function * exportFeature_() {
     }
   } catch (e) {
     toastr.error(e.message)
-    yield put(actions.feature['success']({loading: false}))
+    yield put(actions.feature['success']({loading: false,error: e.message}))
   } finally {
     if (yield cancelled()) {
       // 手动取消任务
@@ -129,7 +131,9 @@ function * exportFeature_() {
         savedNumber: 0,
         loading: false,
       }))
-      folderPath && rimraf(folderPath,err => err && toastr.error(err.message))
+      if (folderPath && !(store.getState().FEATURE.error)) {
+        rimraf(folderPath,err => err && toastr.error(err.message))
+      }
     } else {
       // 任务处理结束，打通循环
       yield put(actions.export_feature['failure']())
@@ -177,7 +181,10 @@ function * saveData(api,url,Name,dirName) {
     }
   } catch(e) {
     toastr.error(e.message)
-    yield put(actions.feature['success']({loading: false}))
+    yield put(actions.feature['success']({
+      loading: false,
+      error: e.message
+    }))
+    yield put(actions.export_feature['failure']())
   }
-
 }

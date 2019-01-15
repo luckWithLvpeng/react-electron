@@ -1,11 +1,12 @@
-import {put, takeLatest,call,take,fork,cancel,cancelled} from 'redux-saga/effects'
-import { delay } from 'redux-saga'
+import {cancel, cancelled, fork, put, take, takeLatest} from 'redux-saga/effects'
+import {delay} from 'redux-saga'
 import * as actions from '../actions'
 import axios from "axios/index";
 import {config} from '../service/http'
 import toastr from 'toastr'
 import {store} from '../App'
 import moment from "moment/moment";
+
 const electron = window.require('electron');
 const fs = electron.remote.require('fs');
 const os = electron.remote.require('os');
@@ -13,6 +14,10 @@ const rimraf = electron.remote.require('rimraf');
 
 var folderPath = ""
 
+// 保存已经读取的数据
+var savedNumber = 0
+// 缓存的线程数
+var subNum = 50
 
 export function* getChannel() {
   yield takeLatest(actions.CHANNEL["REQUEST"], function* () {
@@ -57,14 +62,14 @@ export function* getSublib() {
 }
 
 export function* exportLog() {
-  while ( yield take(actions.EXPORT_LOG["REQUEST"]) ) {
+  while (yield take(actions.EXPORT_LOG["REQUEST"])) {
     const bgSyncLog = yield fork(exportLog_)
     yield take(actions.EXPORT_LOG["FAILURE"])
     yield cancel(bgSyncLog)
   }
 }
 
-function * exportLog_() {
+function* exportLog_() {
   const {SERVER, LOG} = store.getState();
   var server = SERVER;
   var log = LOG
@@ -73,6 +78,7 @@ function * exportLog_() {
     allNumber: 0,
     acquiredNumber: 0,
     savedNumber: 0,
+    error: "",
     loading: true
   }))
   try {
@@ -136,13 +142,35 @@ function * exportLog_() {
       }
       // 防止在获取数据期间有新的数据添加进来
       yield put(actions.log['success']({allNumber: allLog.length}))
-      yield call(saveData,allLog)
+      var allNumber = allLog.length
+      folderPath = getPath();
+      try {
+        fs.accessSync(folderPath, fs.constants.F_OK);
+      } catch (e) {
+        fs.mkdirSync(folderPath);
+      }
+      savedNumber = 0;
+      var url = "http://" + server.ip + ":" + server.port
+      // yield call(saveData,allLog)
+      for (var i = 0; i < allNumber; i++) {
+        yield fork(saveData, url, allLog[i], log.logmode, folderPath)
+        // 控制fork的线程数，避免资源耗尽
+        while ((i + 1) - savedNumber >= subNum) {
+          yield  delay(200)
+        }
+      }
+      // 开启多线程 ，等待子线程结束
+      while (savedNumber < allNumber) {
+        yield delay(200)
+      }
+      yield put(actions.log['success']({loading: false}))
     } else {
       toastr.error(data.info)
+      yield put(actions.log['success']({error: data.info}))
     }
   } catch (e) {
     toastr.error(e.message)
-    yield put(actions.log['success']({loading: false}))
+    yield put(actions.log['success']({loading: false,error: e.message}))
   } finally {
     if (yield cancelled()) {
       // 手动取消任务
@@ -153,7 +181,9 @@ function * exportLog_() {
         savedNumber: 0,
         loading: false,
       }))
-      rimraf(folderPath,err => err && toastr.error(err.message))
+      if (folderPath && !(store.getState().LOG.error)) {
+        rimraf(folderPath, err => err && toastr.error(err.message))
+      }
     } else {
       // 任务处理结束，打通循环
       yield put(actions.export_log['failure']())
@@ -177,47 +207,34 @@ function getPath() {
   }
   return target
 }
-function * saveData(v) {
-  var dirName = getPath();
-  folderPath = dirName
-  const {SERVER, LOG} = store.getState();
-  var server = SERVER;
-  var log = LOG
-  fs.mkdir(dirName, "0777", function (err) {
-    if (err) {
-      return toastr.error(err.message)
-    }
-  })
-  var url = "http://" + server.ip + ":" + server.port
 
+function* saveData(url, log, logmode, dirName) {
   try {
-    for (var i = 0; i < v.length; i++) {
-      if (log.logmode === "1" || log.logmode === "2") {
-        var {data} = yield axios.get(url + v[i].CropFrame_data, {responseType: "arraybuffer"})
-        var logName = v[i].Id + "_" + v[i].Channel_name + ".jpg"
-          logName = logName.replace(/\//g,"")
-        fs.writeFile(dirName + logName, new Buffer(data), (e) => {
-          if (e) {
-            toastr.error(e.message)
-          }
-        })
-      }
-      if ((log.logmode === "1" || log.logmode === "3") && v[i].Feature_id != 0) {
-        var {data} = yield axios.get(url + v[i].Feature_data, {responseType: "arraybuffer"})
-        var featureName = v[i].Id + "_" + v[i].Feature_name + "_" + v[i].Sublib + "_" + v[i].Score + ".jpg"
-        featureName = featureName.replace(/\//g,"")
-        fs.writeFile(dirName + featureName, new Buffer(data), (e) => {
-          if (e) {
-            toastr.error(e.message)
-          }
-        })
-      }
-      yield put(actions.log['success']({savedNumber: (i + 1)}))
+    if (logmode === "1" || logmode === "2") {
+      var {data} = yield axios.get(url + log.CropFrame_data, {responseType: "arraybuffer"})
+      var logName = log.Id + "_" + log.Channel_name + ".jpg"
+      logName = logName.replace(/\//g, "")
+      fs.writeFile(dirName + logName, new Buffer(data), (e) => {
+        if (e) {
+          toastr.error(e.message)
+        }
+      })
     }
-      yield put(actions.log['success']({loading: false}))
-  } catch(e) {
+    if ((logmode === "1" || logmode === "3") && log.Feature_id != 0) {
+      var {data} = yield axios.get(url + log.Feature_data, {responseType: "arraybuffer"})
+      var featureName = log.Id + "_" + log.Feature_name + "_" + log.Sublib + "_" + log.Score + ".jpg"
+      featureName = featureName.replace(/\//g, "")
+      fs.writeFile(dirName + featureName, new Buffer(data), (e) => {
+        if (e) {
+          toastr.error(e.message)
+        }
+      })
+    }
+    yield put(actions.log['success']({savedNumber: ++savedNumber}))
+  } catch (e) {
     toastr.error(e.message)
-    yield put(actions.log['success']({loading: false}))
+    yield put(actions.log['success']({loading: false,error: e.message}))
+    yield put(actions.export_log['failure']())
   }
 
 }

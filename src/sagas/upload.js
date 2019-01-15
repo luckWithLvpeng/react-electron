@@ -22,12 +22,15 @@ var folderStroe = null
 var savedNumber = 0
 var failureNumber = 0
 // 多线程数量队列控制
-var subNum = 50
+var subNum = 30
+var canceled = false
+var process = 0
 export function* uploadFeature() {
   while (yield take(actions.UPLOAD_FEATURE["REQUEST"])) {
-    const bgSyncUploadFeature = yield fork(uploadFeature_)
+    canceled = false
+    yield fork(uploadFeature_)
     yield take(actions.UPLOAD_FEATURE["FAILURE"])
-    yield cancel(bgSyncUploadFeature)
+    canceled = true
   }
 }
 
@@ -65,6 +68,7 @@ function* uploadFeature_() {
 
     failureNumber = folderStroe.get("failureNumber") || 0
     savedNumber = folderStroe.get("savedNumber") || 0
+    process = savedNumber + failureNumber
     var folderName = ""
     if (isWindow) {
       folderName = parsePath.win32(upload.path).base;
@@ -74,15 +78,21 @@ function* uploadFeature_() {
     var failurePath = getFailurePath(upload.faildPath,folderName)
     var allNumber = images.length;
     for (var i = failureNumber + savedNumber; i < allNumber; i++) {
+
       yield fork(postImage,url,failurePath,images[i],upload.sublibId)
+      // 处理进度
+      process = i +1
       // 控制fork的线程数，避免资源耗尽
-      while((i+1) - (failureNumber + savedNumber) >=subNum) {
+      while(process - (failureNumber + savedNumber) >=subNum) {
           yield  delay(500)
+      }
+      if (canceled) {
+        break
       }
 
     }
     // 开启多线程 ，等待子线程结束
-    while (failureNumber + savedNumber < allNumber) {
+    while (failureNumber + savedNumber < process) {
       yield delay(200)
     }
     yield put(actions.upload['success']({

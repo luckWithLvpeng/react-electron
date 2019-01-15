@@ -2,9 +2,9 @@ import * as actions from '../actions'
 
 const electron = window.require('electron');
 const Store = electron.remote.require('electron-store');
-var store = new Store({name: "userData"})
-var fileFolder = store.get('fileFolder_upload');
-var failureFileFolder = store.get('fileFolder_upload_failure');
+var userData = new Store({name: "userData"})
+var fileFolder = userData.get('fileFolder_upload');
+var failureFileFolder = userData.get('fileFolder_upload_failure');
 var store = null;
 if(fileFolder && fileFolder.length >0) {
   store = new Store({name: fileFolder.replace(/[\\/:]/g,"_")})

@@ -310,7 +310,13 @@ class Log extends Component {
             </Row>
           ) : null
         }
-        <br/>
+        {log.error ? (
+          <div className={"text-danger  text-center"}>
+            {
+              log.error
+            }
+          </div>
+        ): null}
         <FormGroup>
           <Col xs={12} className="text-center">
             {

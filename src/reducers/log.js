@@ -21,6 +21,7 @@ export default {
     allNumber: 0,
     acquiredNumber: 0,
     savedNumber: 0,
+    error: "",
     loading: false
   }, action) {
     switch (action.type) {

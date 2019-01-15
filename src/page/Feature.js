@@ -179,6 +179,11 @@ class Log extends Component {
             </Row>
           ) : null
         }
+        {feature.error ? (
+          <div className={"text-danger text-center"}>
+            失败信息： {feature.error}
+          </div>
+        ): null}
         <br/>
         <FormGroup>
           <Col xs={12} className="text-center">
@@ -190,6 +195,7 @@ class Log extends Component {
             }
           </Col>
         </FormGroup>
+
       </Form>
     )
   }
