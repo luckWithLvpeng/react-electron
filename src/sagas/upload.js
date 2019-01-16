@@ -25,10 +25,11 @@ var failureNumber = 0
 var subNum = 30
 var canceled = false
 var process = 0
+var bgtask = null
 export function* uploadFeature() {
   while (yield take(actions.UPLOAD_FEATURE["REQUEST"])) {
     canceled = false
-    yield fork(uploadFeature_)
+    bgtask = yield fork(uploadFeature_)
     yield take(actions.UPLOAD_FEATURE["FAILURE"])
     canceled = true
   }
@@ -77,14 +78,13 @@ function* uploadFeature_() {
     }
     var failurePath = getFailurePath(upload.faildPath,folderName)
     var allNumber = images.length;
-    for (var i = failureNumber + savedNumber; i < allNumber; i++) {
-
-      yield fork(postImage,url,failurePath,images[i],upload.sublibId)
+    for (var j = failureNumber + savedNumber; j < allNumber; j++) {
+      yield fork(postImage,url,failurePath,images[j],upload.sublibId)
       // 处理进度
-      process = i +1
+      process = j + 1
       // 控制fork的线程数，避免资源耗尽
       while(process - (failureNumber + savedNumber) >=subNum) {
-          yield  delay(500)
+          yield  delay(300)
       }
       if (canceled) {
         break
@@ -102,10 +102,12 @@ function* uploadFeature_() {
   } catch (e) {
     toastr.error(e.message)
     yield put(actions.upload['success']({
-      loading: false,
       errorText: e.message,
-      traversing: false
     }))
+    if (bgtask) {
+      yield cancel(bgtask)
+    }
+    yield put(actions.upload_feature['failure']())
   } finally {
     if (yield cancelled()) {
       // 手动取消任务
@@ -123,7 +125,7 @@ function* uploadFeature_() {
     folderStroe.set("failureNumber",failureNumber)
   }
 }
-function* postImage(url,failurePath,imagePath,sublibId) {
+function* postImage(url,failurePath,imagePath,sublibId,index) {
   var parseName = {};
   if (isWindow) {
     parseName = parsePath.win32(imagePath)
@@ -155,7 +157,12 @@ function* postImage(url,failurePath,imagePath,sublibId) {
       loading: false,
       traversing: false
     }))
+    folderStroe.set("savedNumber",  savedNumber)
+    folderStroe.set("failureNumber",failureNumber)
     yield put(actions.upload_feature['failure']())
+    if (bgtask) {
+      yield cancel(bgtask)
+    }
   }
 
 }
