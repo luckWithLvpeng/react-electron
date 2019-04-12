@@ -48,7 +48,7 @@
     "eject": "react-scripts eject",
     "ebuild": "electron-builder -m",
     "preebuild": "yarn build",
-    "pack": "build -mw",
+    "pack": "build -m",
     "prepack": "yarn build",
     "dev": "concurrently \"BROWSER=none yarn start\" \"wait-on http://localhost:3000 && electron .\""
   },

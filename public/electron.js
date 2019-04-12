@@ -12,6 +12,8 @@ function createWindow() {
   mainWindow = new BrowserWindow({ width: 1000, height: 800 });
   mainWindow.loadURL(isDev ? 'http://localhost:3000' : `file://${path.join(__dirname, '../build/index.html')}`);
   mainWindow.on('closed', () => mainWindow = null);
+  //DEVTOOLS
+  isDev&&mainWindow.webContents.openDevTools()
 }
 
 app.on('ready', createWindow);
