@@ -138,10 +138,10 @@ class RequestFeature extends Component {
           loading ? (
             <FormGroup bsSize="small">
               <Col componentClass={ControlLabel} xs={3}>
-                遍历目录中...
+                遍历目录
               </Col>
               <Col xs={7} componentClass={ControlLabel} style={{textAlign: "left"}}>
-                {`${imgNum}张图片`}
+                {`目录中包含：  ${imgNum}   张图片`}
               </Col>
             </FormGroup>
 
@@ -189,7 +189,7 @@ class RequestFeature extends Component {
           <Col xs={12} className="text-center">
                 {loading? <Button bsSize="small" className="btn_cancel"
                          onClick={(e) => this.clear(e)}>取消任务</Button>  :
-                <Button bsSize="small" className="btn_default" type="submit">开始上传</Button>}
+                <Button bsSize="small" className="btn_default" type="submit">开始获取</Button>}
           </Col>
         </FormGroup>
       </Form>
