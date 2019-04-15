@@ -223,7 +223,7 @@ function* saveData(url, log, logmode, dirName) {
       var { data } = yield axios.get(url + log.CropFrame_data, { responseType: "arraybuffer" })
       if (data.byteLength > 2000) {
         var logName = log.Id + "_" + log.Channel_name + "_" + now + ".jpg"
-        logName = logName.replace(/\//g, "")
+        logName = logName.replace(/[\/:]/g, "_")
         fs.writeFile(dirName + logName, new Buffer(data), (e) => {
           if (e) {
             toastr.error(e.message)
@@ -242,7 +242,7 @@ function* saveData(url, log, logmode, dirName) {
       if (data.byteLength > 2000) {
        
         var featureName = log.Id + "_" + log.Feature_name + "_" + log.Sublib + "_" + log.Score + "_" + now + ".jpg"
-        featureName = featureName.replace(/\//g, "")
+        featureName = featureName.replace(/[\/:]/g, "_")
         fs.writeFile(dirName + featureName, new Buffer(data), (e) => {
           if (e) {
             toastr.error(e.message)
@@ -259,7 +259,7 @@ function* saveData(url, log, logmode, dirName) {
       var { data } = yield axios.get(url + "/v1/log/sceneImg/" + log.Id, { responseType: "arraybuffer" })
       if (data.byteLength > 2000) {
         var sceneName = log.Id + "_" + log.Channel_name + "_" + now + "_场景.jpg"
-        sceneName = sceneName.replace(/\//g, "")
+        sceneName = sceneName.replace(/[\/:]/g, "_")
         fs.writeFile(dirName + sceneName, new Buffer(data), (e) => {
           if (e) {
             toastr.error(e.message)
