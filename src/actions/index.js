@@ -35,6 +35,8 @@ export const FEATURE = createRequestTypes("FEATURE")
 export const EXPORT_FEATURE = createRequestTypes("EXPORT_FEATURE")
 export const UPLOAD = createRequestTypes("UPLOAD")
 export const UPLOAD_FEATURE = createRequestTypes("UPLOAD_FEATURE")
+export const REQUEST_FEATURE = createRequestTypes("REQUEST_FEATURE")
+
 
 export const server = actionGenerate(SERVER)
 export const log = actionGenerate(LOG)
@@ -45,3 +47,4 @@ export const feature = actionGenerate(FEATURE)
 export const export_feature = actionGenerate(EXPORT_FEATURE)
 export const upload = actionGenerate(UPLOAD)
 export const upload_feature = actionGenerate(UPLOAD_FEATURE)
+export const request_feature = actionGenerate(REQUEST_FEATURE)

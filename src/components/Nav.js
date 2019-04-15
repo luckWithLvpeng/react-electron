@@ -27,6 +27,13 @@ class Nav extends Component {
         >
           导出底库图片
         </NavLink>
+        <NavLink
+          to="/requestfeature"
+          className="requestfeature"
+          activeClassName="active requestfeature_active"
+        >
+          获取图片特征
+        </NavLink>
       </div>
     )
   }

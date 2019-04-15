@@ -33,5 +33,6 @@ export const config = {
     getLogMatchedNum: "/v1/log/getLogMatchedNum",
     queryname: "/v1/log/querynames",  //  查询一条记录的名称和分库名称
     resetTime: "/v1/public/resetTime",  //  重置时间
+    extractImageFeature:"/v1/feature/extractImageFeature"//提取feature ， 提取特征 > 图片提取特征
   }
 }

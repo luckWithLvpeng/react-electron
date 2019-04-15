@@ -9,6 +9,8 @@ import toastr from "toastr";
 import Log from '../page/Log'
 import Feature from '../page/Feature'
 import Upload from '../page/Upload'
+import RequestFeature from '../page/RequestFeature'
+
 import Refresh from '../asset/refresh.png'
 
 toastr.options.showMethod = 'slideDown';
@@ -96,6 +98,8 @@ class Layout extends Component {
               <Route exact path="/" component={Upload}/>
               <Route path="/log" component={Log}/>
               <Route path="/feature" component={Feature}/>
+              <Route path="/requestfeature" component={RequestFeature}/>
+
             </Switch>
           </div>
         </div>

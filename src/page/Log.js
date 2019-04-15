@@ -157,8 +157,11 @@ class Log extends Component {
               }))}
               value={log.logmode}>
               <option value="1">采集图和底库图</option>
+              <option value="4">采集图和底库图和场景图</option>
               <option value="2">采集图</option>
               <option value="3">底库图</option>
+              <option value="5">场景图</option>
+
             </FormControl>
           </Col>
         </FormGroup>

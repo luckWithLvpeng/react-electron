@@ -42,6 +42,15 @@
     background: url("../asset/feature_icon_active.png") no-repeat 10% center;
 }
 
+.left_nav a.requestfeature {
+    background: url("../asset/feature_icon.png") no-repeat 10% center;
+}
+
+.left_nav a.requestfeature_active {
+    background: url("../asset/feature_icon_active.png") no-repeat 10% center;
+}
+
+
 .left_nav a.active {
     background-color: #24282C;
     color: #B3C0FE;
