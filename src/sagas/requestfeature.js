@@ -43,7 +43,7 @@ let requestOkNum = 0
 let loading = true
 let complete = false
 // 多线程数量队列控制
-var subNum = 30
+var subNum = 8
 // 特征数据文档存储最大条目
 let maxNum = 1000
 export function* requestFeature() {
