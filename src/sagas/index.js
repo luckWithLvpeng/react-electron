@@ -1,4 +1,4 @@
-import { all,fork } from 'redux-saga/effects'
+import {all, fork} from 'redux-saga/effects'
 import * as layout from './layout'
 import * as log from './log'
 import * as feature from './feature'
@@ -7,16 +7,16 @@ import * as requestfeature from './requestfeature'
 
 
 var allSagas = {
-  ...layout,
-  ...feature,
-  ...log,
-  ...upload,
-  ...requestfeature,
+    ...layout,
+    ...feature,
+    ...log,
+    ...upload,
+    ...requestfeature,
 }
- var arrFunc = []
+var arrFunc = []
 for (var k in allSagas) {
-  arrFunc.push(fork(allSagas[k]))
+    arrFunc.push(fork(allSagas[k]))
 }
 export default function* root() {
-  yield all(arrFunc)
+    yield all(arrFunc)
 }

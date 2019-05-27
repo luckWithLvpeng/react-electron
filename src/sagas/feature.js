@@ -19,7 +19,7 @@ var savedNumber = 0
 // 保存名字重复的图片
 var allName = {}
 // 缓存的线程数
-var subNum = 50
+var subNum = 30
 
 export function* exportFeature() {
   while ( yield take(actions.EXPORT_FEATURE["REQUEST"]) ) {

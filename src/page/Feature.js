@@ -5,6 +5,7 @@ import {Button, Col, ControlLabel, Form, FormControl, FormGroup, InputGroup, Pro
 import {connect} from "react-redux";
 import 'daterangepicker'
 import toastr from "toastr";
+import {withTranslation} from "react-i18next";
 
 const electron = window.require('electron');
 const {dialog} = electron.remote;
@@ -12,9 +13,9 @@ const Store = electron.remote.require('electron-store');
 var store = new Store({name: "userData"})
 class Log extends Component {
   pickerFolder() {
-    const {dispatch, feature} = this.props
+    const {dispatch, feature,t} = this.props
     if(feature.loading) {
-      return toastr.warning("正在执行下载任务")
+      return toastr.warning(t("download in progress"))
     }
     var path = dialog.showOpenDialog({
       properties: ['openDirectory']
@@ -30,33 +31,33 @@ class Log extends Component {
 
   exportFeature(e) {
     e.preventDefault();
-    const {server, feature, dispatch} = this.props;
+    const {server, feature, dispatch,t} = this.props;
     if (!server.ip) {
-      return toastr.error("请填写IP")
+      return toastr.error(t("please input IP"))
     } else if (!server.port) {
-      return toastr.error("请填写端口")
+      return toastr.error(t("please input port"))
     }
     if (!feature.path) {
-      return toastr.error("请指定保存目录")
+      return toastr.error(t("specify a saved directory"))
     }
     dispatch(actions.export_feature['request']())
   }
 
   render() {
-    const {feature, dispatch} = this.props
+    const {feature, dispatch,t} = this.props
     return (
       <Form autoComplete="off" horizontal
             onSubmit={this.exportFeature.bind(this)}>
         <FormGroup bsSize="small">
           <Col componentClass={ControlLabel} xs={3}>
-            保存目录 :
+            {t("save directory")} :
           </Col>
           <Col xs={7}>
             <InputGroup>
               <FormControl
                 type="text"
                 value={feature.path}
-                placeholder="保存目录"
+                placeholder={t("save directory")}
                 onChange={(e) => dispatch(actions.feature['success']({
                   ...feature,
                   path: e.target.value.toString().trim(),
@@ -67,7 +68,7 @@ class Log extends Component {
                   onClick={this.pickerFolder.bind(this)}
                   className="btn_default"
                   bsSize="small">
-                  选择目录
+                  {t("select folder")}
                 </Button>
               </InputGroup.Button>
             </InputGroup>
@@ -75,13 +76,13 @@ class Log extends Component {
         </FormGroup>
         <FormGroup bsSize="small">
           <Col componentClass={ControlLabel} xs={3}>
-            限制数量 :
+            {t("upload at most")} :
           </Col>
           <Col xs={7}>
             <FormControl
               type="text"
               value={feature.max}
-              placeholder="限制数量,不填则导出所有数据"
+              placeholder={t("limit number, export all data without filling in")}
               onChange={(e) => dispatch(actions.feature['success']({
                 ...feature,
                 max: parseInt(e.target.value, 10) || ""
@@ -94,7 +95,7 @@ class Log extends Component {
             <FormGroup
             >
               <Col componentClass={ControlLabel} xs={3}>
-                选择分库:
+                {t("feature gallery")}:
               </Col>
               <Col xs={7}>
                 <FormControl
@@ -104,7 +105,7 @@ class Log extends Component {
                     sublibId: e.target.value
                   }))}
                   value={feature.sublibId}>
-                  <option value="">全部</option>
+                  <option value="">{t("all")}</option>
                   {
                     this.props.sublibs.map(v => (
                       <option key={v.Id} value={v.Id}>{v.Name}</option>
@@ -117,7 +118,7 @@ class Log extends Component {
         }
         <FormGroup bsSize="small">
           <Col componentClass={ControlLabel} xs={3}>
-            入库状态 :
+            {t("upload status")} :
           </Col>
           <Col xs={7}>
             <FormControl
@@ -127,21 +128,21 @@ class Log extends Component {
                 status: e.target.value
               }))}
               value={feature.status}>
-              <option value="0">全部</option>
-              <option value="1">成功</option>
-              <option value="2">失败</option>
+              <option value="0">{t("all")}</option>
+              <option value="1">{t("success")}</option>
+              <option value="2">{t("fail")}</option>
             </FormControl>
           </Col>
         </FormGroup>
         <FormGroup bsSize="small">
           <Col componentClass={ControlLabel} xs={3}>
-            照片名 :
+            {t("face image name")} :
           </Col>
           <Col xs={7}>
             <FormControl
               type="text"
               value={feature.name}
-              placeholder="照片名"
+              placeholder= {t("face image name")}
               onChange={(e) => dispatch(actions.feature['success']({
                 ...feature,
                 name: e.target.value.trim()
@@ -153,7 +154,7 @@ class Log extends Component {
           feature.allNumber && feature.savedNumber !== feature.allNumber ? (
             <Row>
               <Col xs={3} className="text-right">
-                获取数据 ...
+                {t("getting data")} ...
               </Col>
               <Col xs={7}>
                 <ProgressBar
@@ -168,8 +169,8 @@ class Log extends Component {
             <Row>
               <Col xs={3} className="text-right">
                 {feature.savedNumber === feature.allNumber ?
-                  `导出 [ ${feature.allNumber} ] 条记录` :
-                  ` 保存数据 [ ${feature.savedNumber} / ${feature.allNumber} ]`}
+                    t("export records",{allNumber:feature.allNumber}) :
+                    t("save records",{allNumber:feature.allNumber,savedNumber: feature.savedNumber})}
               </Col>
               <Col xs={7}>
                 <ProgressBar
@@ -181,7 +182,7 @@ class Log extends Component {
         }
         {feature.error ? (
           <div className={"text-danger text-center"}>
-            失败信息： {feature.error}
+            {t("failure message")}： {feature.error}
           </div>
         ): null}
         <br/>
@@ -189,9 +190,9 @@ class Log extends Component {
           <Col xs={12} className="text-center">
             {
               feature.loading ?
-                (<Button bsSize="small" className="btn_cancel" onClick={() => dispatch(actions.export_feature['failure']())}>取消任务</Button>)
+                (<Button bsSize="small" className="btn_cancel" onClick={() => dispatch(actions.export_feature['failure']())}>{t("cancel task")}</Button>)
                 :
-                (<Button bsSize="small" className="btn_default" type="submit">开始导出</Button>)
+                (<Button bsSize="small" className="btn_default" type="submit">{t("start export")}</Button>)
             }
           </Col>
         </FormGroup>
@@ -205,4 +206,4 @@ export default withRouter(connect(state => ({
   server: state.SERVER || {},
   feature: state.FEATURE || {},
   sublibs: state.SUBLIB || [],
-}), null)(Log))
+}), null)(withTranslation()(Log)))

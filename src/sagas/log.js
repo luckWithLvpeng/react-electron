@@ -17,7 +17,7 @@ var folderPath = ""
 // 保存已经读取的数据
 var savedNumber = 0
 // 缓存的线程数
-var subNum = 50
+var subNum = 30
 
 var logStr =""
 export function* getChannel() {
@@ -174,12 +174,15 @@ function* exportLog_() {
     toastr.error(e.message)
     yield put(actions.log['success']({ loading: false, error: e.message }))
   } finally {
+
     logStr +=moment().format("YYYY-MM-DD HH:mm:ss")+"------导出历史日志任务结束\r\n"
-    fs.writeFile(folderPath + "/log.log", logStr, (e) => {
-      if (e) {
-        toastr.error(e.message)
-      }
-    })
+    if (folderPath) {
+      fs.writeFile(folderPath + "/log.log", logStr, (e) => {
+        if (e) {
+          toastr.error(e.message)
+        }
+      })
+    }
     if (yield cancelled()) {
       // 手动取消任务
       yield delay(100)

@@ -22,7 +22,7 @@ var folderStroe = null
 var savedNumber = 0
 var failureNumber = 0
 // 多线程数量队列控制
-var subNum = 30
+var subNum = 20
 var canceled = false
 var process = 0
 var bgtask = null
