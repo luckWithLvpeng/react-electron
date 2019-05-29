@@ -82,6 +82,11 @@
   "please specify the feature storage directory": "请指定特征存储目录",
   "feature extraction": "特征提取",
   "feature gallery": "选择分库",
-  "face image name": "照片名"
+  "face image name": "照片名",
+  "no records": "暂无数据",
+  "_logs": "_历史日志",
+  "_image_from_library": "_底库图片",
+  "No pictures found in the folder": "该文件中没有找到图片",
+  "Upload failed pictures_": "上传失败图片_"
 
 }

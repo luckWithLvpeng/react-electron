@@ -6,7 +6,6 @@ import { initReactI18next } from 'react-i18next';
 
 const electron = window.require('electron');
 const Store = electron.remote.require('electron-store');
-const path = electron.remote.require('path');
 var userStore = new Store({name: "userData"})
 
 

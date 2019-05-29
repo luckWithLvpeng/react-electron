@@ -6,6 +6,7 @@ import {config} from "../service/http";
 import parsePath from 'path-parse'
 import moment from 'moment';
 import {Base64} from 'js-base64';
+import i18n from 'i18next';
 
 const electron = window.require('electron');
 const fs = electron.remote.require('fs');
@@ -61,7 +62,7 @@ function* extractFeature_(imgPath, savePath) {
         let now = moment().format("YYYY-MM-DD HH:mm:ss")
         logStr += now + " ----获取特征任务启动\r\n"
         if (imgNum === 0) {
-            toastr.error("文件夹中没有图片")
+            toastr.error(i18n.t("No pictures found in the folder"))
             yield put(actions.request_feature["failure"])
         } else {
             yield put(actions.request_feature["success"]({
@@ -92,7 +93,7 @@ function* extractFeature_(imgPath, savePath) {
             loading,
             complete
         }))
-        toastr.success("获取特征任务完成")
+        toastr.success(i18n.t("success in feature acquisition"))
     } catch (e) {
         toastr.error(e.message)
     } finally {
@@ -103,7 +104,7 @@ function* extractFeature_(imgPath, savePath) {
             let logPath = yield call(makeFilePath, imgPath, today + "_log.log")
             writeDataToFile(logPath, logStr)
         } catch (err) {
-            toastr.error("日志保存出错")
+            toastr.error("日志保存出错"+err.toString())
         }
 
     }

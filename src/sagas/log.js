@@ -6,7 +6,7 @@ import { config } from '../service/http'
 import toastr from 'toastr'
 import { store } from '../App'
 import moment from "moment/moment";
-
+import i18n from 'i18next';
 const electron = window.require('electron');
 const fs = electron.remote.require('fs');
 const os = electron.remote.require('os');
@@ -75,7 +75,7 @@ function* exportLog_() {
   var server = SERVER;
   var log = LOG
   var url = "http://" + server.ip + ":" + server.port + config.api.getLog
-  logStr=moment().format("YYYY-MM-DD HH:mm:ss")+"------"+"导出历史日志任务开始\r\n"
+  logStr=moment().format("YYYY-MM-DD HH:mm:ss")+"------"+"start\r\n"
   yield put(actions.log['success']({
     allNumber: 0,
     acquiredNumber: 0,
@@ -108,7 +108,7 @@ function* exportLog_() {
           savedNumber: 0,
           loading: false,
         }))
-        return toastr.success("暂无数据")
+        return toastr.success(i18n.t("no records"))
       }
       if (log.max !== "" && total > log.max) {
         total = log.max
@@ -175,7 +175,7 @@ function* exportLog_() {
     yield put(actions.log['success']({ loading: false, error: e.message }))
   } finally {
 
-    logStr +=moment().format("YYYY-MM-DD HH:mm:ss")+"------导出历史日志任务结束\r\n"
+    logStr +=moment().format("YYYY-MM-DD HH:mm:ss")+"------end\r\n"
     if (folderPath) {
       fs.writeFile(folderPath + "/log.log", logStr, (e) => {
         if (e) {
@@ -203,7 +203,7 @@ function* exportLog_() {
 }
 
 function getPath() {
-  var dirName = moment().format("YYYY-MM-DD_HH-mm-ss") + "_历史日志"
+  var dirName = moment().format("YYYY-MM-DD_HH-mm-ss") + i18n.t("_logs")
   const { LOG } = store.getState();
   var target = ""
   var ostype = os.platform()
@@ -230,13 +230,13 @@ function* saveData(url, log, logmode, dirName) {
         fs.writeFile(dirName + logName, new Buffer(data), (e) => {
           if (e) {
             toastr.error(e.message)
-            logStr +=moment().format("YYYY-MM-DD HH:mm:ss")+"------"+logName+"存储失败:"+e.message+"\r\n"
+            logStr +=moment().format("YYYY-MM-DD HH:mm:ss")+"------"+logName+"save fail:"+e.message+"\r\n"
           }else{
-            logStr +=moment().format("YYYY-MM-DD HH:mm:ss")+"------"+logName+"存储成功\r\n"
+            logStr +=moment().format("YYYY-MM-DD HH:mm:ss")+"------"+logName+"save success\r\n"
           }
         })
       } else {
-        logStr +=moment().format("YYYY-MM-DD HH:mm:ss")+"------"+log.Id + "_" + log.Channel_name + "_" + now +"无采集图\r\n"
+        logStr +=moment().format("YYYY-MM-DD HH:mm:ss")+"------"+log.Id + "_" + log.Channel_name + "_" + now +"no_capture\r\n"
       }
 
     }
@@ -249,30 +249,30 @@ function* saveData(url, log, logmode, dirName) {
         fs.writeFile(dirName + featureName, new Buffer(data), (e) => {
           if (e) {
             toastr.error(e.message)
-            logStr +=moment().format("YYYY-MM-DD HH:mm:ss")+"------"+featureName+"存储失败:"+e.message+"\r\n"
+            logStr +=moment().format("YYYY-MM-DD HH:mm:ss")+"------"+featureName+"save fail:"+e.message+"\r\n"
           }else{
-            logStr +=moment().format("YYYY-MM-DD HH:mm:ss")+"------"+featureName+"存储成功\r\n"
+            logStr +=moment().format("YYYY-MM-DD HH:mm:ss")+"------"+featureName+"save success\r\n"
           }
         })
       } else {
-        logStr +=moment().format("YYYY-MM-DD HH:mm:ss")+"------"+log.Id + "_" + log.Channel_name + "_" + now +"无底层图\r\n"
+        logStr +=moment().format("YYYY-MM-DD HH:mm:ss")+"------"+log.Id + "_" + log.Channel_name + "_" + now +"no_Candidate\r\n"
       }
     }
     if ((logmode === "4" || logmode === "5") && log.Feature_id != 0) {
       var { data } = yield axios.get(url + "/v1/log/sceneImg/" + log.Id, { responseType: "arraybuffer" })
       if (data.byteLength > 2000) {
-        var sceneName = log.Id + "_" + log.Channel_name + "_" + now + "_场景.jpg"
+        var sceneName = log.Id + "_" + log.Channel_name + "_" + now + "_scene.jpg"
         sceneName = sceneName.replace(/[\/:]/g, "_")
         fs.writeFile(dirName + sceneName, new Buffer(data), (e) => {
           if (e) {
             toastr.error(e.message)
-            logStr +=moment().format("YYYY-MM-DD HH:mm:ss")+"------"+sceneName+"存储失败:"+e.message+"\r\n"
+            logStr +=moment().format("YYYY-MM-DD HH:mm:ss")+"------"+sceneName+"save fail:"+e.message+"\r\n"
           }else{
-            logStr +=moment().format("YYYY-MM-DD HH:mm:ss")+"------"+sceneName+"存储成功\r\n"
+            logStr +=moment().format("YYYY-MM-DD HH:mm:ss")+"------"+sceneName+"save success\r\n"
           }
         })
       } else {
-        logStr +=moment().format("YYYY-MM-DD HH:mm:ss")+"------"+log.Id + "_" + log.Channel_name + "_" + now +"无场景图\r\n"
+        logStr +=moment().format("YYYY-MM-DD HH:mm:ss")+"------"+log.Id + "_" + log.Channel_name + "_" + now +"no_scene\r\n"
 
         
       }

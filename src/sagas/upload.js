@@ -6,6 +6,8 @@ import toastr from 'toastr'
 import {store} from '../App'
 import {config} from "../service/http";
 import parsePath from 'path-parse'
+import i18n from 'i18next';
+
 const electron = window.require('electron');
 const fs = electron.remote.require('fs');
 const path = electron.remote.require('path');
@@ -65,6 +67,10 @@ function* uploadFeature_() {
       folderStroe.set(pathString,JSON.stringify(images))
       folderStroe.set("traversed",true)
       folderStroe.set("allNumber",images.length)
+    }
+
+    if (images.length === 0) {
+      return toastr.warning(i18n.t("No pictures found in the folder"))
     }
 
     failureNumber = folderStroe.get("failureNumber") || 0
@@ -175,7 +181,7 @@ function copyFile(src, dest) {
   readStream.pipe(fs.createWriteStream(dest));
 }
 function getFailurePath(path,folderName) {
-  var dirName = "上传失败图片_" + folderName
+  var dirName = i18n.t("Upload failed pictures_") + folderName
   var target = ""
   if (isWindow) {
     target = path + "\\" + dirName + "\\"

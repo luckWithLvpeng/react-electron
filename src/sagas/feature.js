@@ -1,4 +1,4 @@
-import {call, cancel, cancelled, fork, put, take} from 'redux-saga/effects'
+import {cancel, cancelled, fork, put, take} from 'redux-saga/effects'
 import {delay} from 'redux-saga'
 import * as actions from '../actions'
 import axios from "axios/index";
@@ -6,7 +6,7 @@ import {config} from '../service/http'
 import toastr from 'toastr'
 import {store} from '../App'
 import moment from "moment/moment";
-
+import i18n from 'i18next';
 const electron = window.require('electron');
 const fs = electron.remote.require('fs');
 const os = electron.remote.require('os');
@@ -62,7 +62,7 @@ function * exportFeature_() {
           savedNumber: 0,
           loading: false,
         }))
-        return toastr.success("暂无数据")
+        return toastr.success(i18n.t("no records"))
       }
       if (feature.max !== "" && total > feature.max) {
         total = feature.max
@@ -142,7 +142,7 @@ function * exportFeature_() {
 }
 
 function getPath() {
-  var dirName = moment().format("YYYY-MM-DD_HH-mm-ss") + "_底库图片"
+  var dirName = moment().format("YYYY-MM-DD_HH-mm-ss") + i18n.t("_image_from_library")
   const {FEATURE} = store.getState();
   var target = ""
   var ostype = os.platform()

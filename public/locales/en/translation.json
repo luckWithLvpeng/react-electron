@@ -82,5 +82,10 @@
   "please specify the feature storage directory": "Please specify the folder for saving feature",
   "feature extraction": "Extraction status",
   "feature gallery": "Feature Gallery",
-  "face image name": "Face Image Name"
+  "face image name": "Face Image Name",
+  "no records": "no records",
+  "_logs": "_logs",
+  "_image_from_library": "_image_from_library",
+  "No pictures found in the folder": "No pictures found in the folder",
+  "Upload failed pictures_": "Upload failed pictures_"
 }
