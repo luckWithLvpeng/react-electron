@@ -186,7 +186,7 @@ class Log extends Component {
           ) : null
         }
         {
-          (upload.savedNumber || upload.failureNumber) && upload.allNumber && !upload.traversing ? (
+          (upload.savedNumber || upload.failureNumber) && upload.allNumber ? (
             <Row>
               <Col xs={3} className="text-right">
                 {t("progress") + `[ ${upload.savedNumber + upload.failureNumber} / ${upload.allNumber} ]`}
@@ -224,15 +224,19 @@ class Log extends Component {
 
         <br/>
         <FormGroup>
-          <Col xs={12} className="text-center">
-            {
-              upload.loading ?
-                (<Button bsSize="small" className="btn_cancel"
-                         onClick={() => dispatch(actions.upload_feature['failure']())}>{t("cancel task")}</Button>)
-                :
-                (<Button bsSize="small" className="btn_default" type="submit">{t("start upload")}</Button>)
-            }
-          </Col>
+          {
+            !upload.traversing ? (
+                <Col xs={12} className="text-center">
+                  {
+                    upload.loading && !upload.traversing ?
+                        (<Button bsSize="small" className="btn_cancel"
+                                 onClick={() => dispatch(actions.upload_feature['failure']())}>{t("cancel task")}</Button>)
+                        :
+                        (<Button bsSize="small" className="btn_default" type="submit">{t("start upload")}</Button>)
+                  }
+                </Col>
+            ):null
+          }
         </FormGroup>
       </Form>
     )
