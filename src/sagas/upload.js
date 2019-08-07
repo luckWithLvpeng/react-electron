@@ -202,7 +202,7 @@ function* walkDir(dir,pathString) {
                 images = images.concat(data)
             } else {
                 var extname = path.extname(name)
-                if ([".jpg", ".jpeg", ".png"].indexOf(extname) >= 0) {
+                if ([".jpg", ".jpeg", ".png",".bmp",".tiff",".svg"].indexOf(extname.toLowerCase()) >= 0) {
                     images.push(filePath)
                     yield put(actions.upload['success']({allNumber: ++num}))
                     if (num % 200 === 0) {

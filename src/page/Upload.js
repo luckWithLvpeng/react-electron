@@ -9,6 +9,7 @@ import {withTranslation} from "react-i18next";
 
 const electron = window.require('electron');
 const {dialog} = electron.remote;
+const fs = electron.remote.require('fs');
 const Store = electron.remote.require('electron-store');
 var userStore = new Store({name: "userData"})
 class Log extends Component {
@@ -62,14 +63,25 @@ class Log extends Component {
     } else if (!server.port) {
       return toastr.error(t("please input port"))
     }
-    if (!upload.path) {
-      return toastr.error(t("please specify the picture folder"))
-    }
+
     if (!upload.faildPath) {
+      return toastr.error(t("please specify the failed upload picture folder"))
+    }
+    try {
+      fs.accessSync(upload.faildPath)
+    } catch (e) {
       return toastr.error(t("please specify the failed upload picture folder"))
     }
     if (!upload.sublibId) {
       return toastr.error(t("please specify library if not please reconnect"))
+    }
+    if (!upload.path) {
+      return toastr.error(t("please specify the picture folder"))
+    }
+    try {
+      fs.accessSync(upload.path)
+    } catch (e) {
+      return toastr.error(t("please specify the picture folder"))
     }
     dispatch(actions.upload_feature['request']())
   }

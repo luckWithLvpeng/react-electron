@@ -12,6 +12,7 @@ import {withTranslation} from "react-i18next";
 const electron = window.require('electron');
 const Store = electron.remote.require('electron-store');
 const {dialog} = electron.remote;
+const fs = electron.remote.require('fs');
 var store = new Store({name: "userData"})
 
 class Log extends Component {
@@ -91,6 +92,11 @@ class Log extends Component {
             return toastr.error(t("please input port"))
         }
         if (!log.path) {
+            return toastr.error(t("specify a saved directory"))
+        }
+        try {
+            fs.accessSync(log.path)
+        } catch (e) {
             return toastr.error(t("specify a saved directory"))
         }
         dispatch(actions.export_log['request']())
