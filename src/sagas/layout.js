@@ -6,8 +6,7 @@ import toastr from 'toastr'
 const electron = window.require('electron');
 const Store = electron.remote.require('electron-store');
 var store = new Store({name: "userData"})
-axios.defaults.headers.common['Token'] = "superroot"
-// axios.defaults.timeout =  6000;
+
 export function* testServer(action) {
   yield takeLatest(actions.SERVER["REQUEST"], function* (action) {
     try {
